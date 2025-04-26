@@ -1,7 +1,7 @@
-# assembler
-Projekte mit Assembler &amp; Arduino
+# Assembler & Arduino
 
 In diesem Projekt habe ich im Rahmen des Moduls Rechnerarchitektur an der Hochschule Bremerhaven Assembler-Programme entwickelt und auf einem Arduino (ATtiny-Mikrocontroller) getestet.
+
 ![image](https://github.com/user-attachments/assets/e4eb1454-2403-4f29-b48a-ad5bfcdd53e3)
 
 **Was ich gemacht habe:**
