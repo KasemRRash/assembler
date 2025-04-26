@@ -1,0 +1,153 @@
+Anleitung für den Mustercode
+================================================================================
+
+## Die Dateien und Aufgaben
+Es gibt sechs Dateien und jede Datei hat ihre Aufgabe. Entlang der Dateien
+ergibt sich ein Wegweiser, welcher Code in welche Datei gehört.
+
+### Makefile
+Hiermit wird die Kompilation gesteuert. Wenn Sie kompilieren möchten, dann tippen
+Sie auf der Konsole
+
+    make
+
+Und dies wird auf den Laborrechnern und im Docker-Container der
+Informatik-Infrastruktur funktionieren.
+
+Wenn Sie Ihr Programm auf den Mikrokontroller schreiben möchten, dann tippen Sie
+auf der Konsole
+
+    make main-firm
+
+Und dies wird nur auf den Laborrechner funktionieren. Es ist die Programmierung
+über die im Labor verwendeten Raspberry Pis eingestellt.
+
+In dieser Datei ändern Sie **nichts**.
+
+#### Löschen der temporären Dateien, clean
+Kommen Sie mit dem Programmieren nicht weiter und haben Sie das Gefühl, dass
+sich der Compiler verheddert hat, dann tippen Sie auf der Konsole
+
+    make clean
+
+und das wird alle temporären Dateien löschen.
+
+#### Weitere Make-Ziele
+Mit
+
+    make
+
+oder
+
+    make all
+
+werden zuerst alle temporären Dateien gelöscht, dann kompiliert. Sie erhalten
+eine .hex-Datei, die Sie mittels
+
+    make main-firm
+
+auf den Kontroller programmieren können.
+
+Mit
+
+    make main-sim
+
+wird die Simulation gestartet, was auf den Laborrechnern und im Docker-Container 
+funkionieren wird. Mit der Simulation wird eine Testausgabe im Format
+Value-Change-Dump, vcd, erzeugt, die Sie auf den Laborrechnern mit dem
+Programm
+
+    gtkwave
+
+anschauen können. Haben Sie Ausgaben auf den Port D programmiert, dann müssten
+Sie hier Signale sehen können. Das Programm gtkwave ist ein Waveform-Viewer,
+also ein Programm zum Anzeigen von Signalen, englisch wave forms.
+
+### Datei main.S
+Dies ist die Hauptdatei des Codes. In dieser Datei ändern Sie **nichts**. Die
+Datei dient dazu, Code aus den Dateien definition.S, funktion.S und betrieb.S
+zusammenzufügen.
+
+### Datei main-sim.S
+Dies ist die Hauptdatei zur Simulation des Codes. In dieser Datei ändern Sie
+**nichts**. Die Datei dient dazu, Code aus den Dateien definition.S, funktion.S
+und betrieb.S für die Simulation zusammenzufügen.
+
+### Datei betrieb.S
+In diese Datei schreiben Sie Ihren ersten Code. Denken Sie daran für die erste
+Zeile Ihres Codes eine Marke zu definieren und diese vom Ende Ihres Code aus
+per (r)jmp anzuspringen, denn sonst wird der Mikrokontroller mit der letzten
+Zeile Ihres Codes aufhören zu arbeiten.
+
+Sie fügen Ihren Code ab der Zeile, die mit "Ihr Code" markiert ist, an.
+
+### Datei definition.S
+Hier sind Konstanten definiert. Statt im Code eine 5 zu schreiben, um den Pin 5
+zu meinen, definiert die Zeile
+
+    .EQU PD5,5
+
+die Konstante PD5 mit dem Wert 5.
+Ebenso wird das Port-Ausgaberegister für Port D mit
+
+    .EQU PORTD,0x12
+
+definiert. Ohne diese Definition müssten Sie für jeden Befehl, der auf diesen
+Port zugreift die Adresse 0x12 schreiben und so können Sie
+
+    cbi PORTD,PD5
+
+schreiben. Was das bedeutet, schlagen Sie im Atmel Instruction-Set Manual nach.
+
+#### Datei funktion.S
+In diese Datei schreiben Sie Ihre Funktionen. Im Prinzip ist eine Funktion
+nichts anderes als ein Stück Code, der mit einer Marke beginnt und mit einem
+Rücksprung endet. Für den GNU AVR-Assembler müssen wir jede Funktion einbetten.
+Das Beispiel
+
+    .GLOBAL addiere
+    .TYPE addiere, @function
+    addiere:
+    ;
+    weiterer Code hier
+    ;
+    Rücksprung
+    .SIZE addiere, .-addiere
+
+definiert die Funktion addiere, die dann mit dem entsprechenden call-Befehl
+aufgerufen werden kann.
+
+Damit die Funktion so wie Sie es wünschen funktioniert, müssen Sie addiere durch
+den von Ihnen gewählten Funktionsnamen austauschen, Ihren Code an die Stelle
+"weiterer Code hier" schreiben und "Rücksprung" durch den richtigen Befehl
+ersetzen.
+
+##### Interrupts programmieren
+Eine Interrupt-Service-Routine ist nichts anderes als eine Funktion, die
+aufgerufen wird, sobald der entsprechende Interrupt ausgelöst wird. Eine
+Interrupt-Service-Routine muss die Form einer Funktion haben und nach dem
+Interrupt benannt sein.
+Das Beispiel
+
+    .GLOBAL __vector_6
+    .TYPE __vector_6, @function
+    __vector_6:
+    ;
+    weiterer Code hier
+    ;
+    Rücksprung aus Interrupt
+    .SIZE __vector_6, .-__vector_6
+
+definiert eine Interrupt-Service-Routine für den Interrupt-Vektor mit der
+Nummer 7(!) auf dem ATtiny2313. Für die Interrupt-Vektor-Nummern siehe Seite
+48 im Handbuch des ATtiny2313.
+
+In einer Interrupt-Service-Routine stehen die Befehle cli und sei nicht.
+(Sie stehen *nur dann, wenn* wir exakt wissen, was das bewirkt *und* es
+nötig ist.)
+
+Damit ein Interrupt ausgelöst werden kann, muss man bestimmte Register auf
+bestimmte Werte setzen. Register und Werte erfahren wir ebenfalls im Handbuch;
+für den Vektor mit der Nummer 7 stehen die Information auf den Seiten 71-88,
+insbesondere Seiten 82-87.
+
